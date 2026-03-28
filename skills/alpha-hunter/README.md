@@ -34,9 +34,16 @@
 
 ### 👥 关注追踪
 监控 KOL 的关注动态，发现新增项目：
-- 10+ 位核心 KOL 关注列表监控
+- **35+ 位核心 KOL** 关注列表监控
 - 每日对比，识别新增关注
 - 记录关注时间，判断入场时机
+
+**监控列表**：
+Cowboy、Tiao、GE、伊藤开司、sanyi.eth、DeG3n、Theo、Yuyue、banditxbt、Eli5DeFi、
+表弟想自由、₿、Mikko Ohtamaa、Imran Khan、Minion、TORO、tails、0xluo.base.eth、
+中国万岁、旧梦、Goatinho、RoyZzz、zac.eth、CZ BNB、bigplayer.eth、Alpha Seeker、
+Yi He、0xSun、JS、金狗挖掘机、信息捕获手、孙宇晨、magnolia、miguelrare、
+script、LaserCat397.eth、CryptoD、Nota
 
 ### ✅ KOL 验证
 通过 [Frontrun.pro](https://frontrun.pro) API 验证项目质量：
