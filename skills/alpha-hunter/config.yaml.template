@@ -1,0 +1,48 @@
+# Alpha Hunter 配置文件模板
+# 复制此文件为 config.yaml 并填写你的配置
+
+# 推文监控博主列表
+tweet_watchlist:
+  - leakmealpha
+  - BR4ted
+  - GuarEmperor
+  - 0xvietnguyen
+  - Trappwurld
+  - tenacious_ar
+  - 0xRohitz
+  - nics_off
+  - Alfa_or_Not
+  - 0xdetweiler
+  - zacxbt
+  - getmoni_io
+  - spice0182
+  - huseyin1tekin
+
+# 关注列表监控
+following_watchlist:
+  - _GuarEmperor
+  - 0xtiao
+  - kaisi420
+  - eternaldegen
+  - 0xdetweiler
+  - zacxbt
+  - Crypto_Goatinho
+  - 0xminion
+  - scriptdotmoney
+  - sanyi_eth_
+
+# Frontrun.pro API 配置
+frontrun:
+  min_kol_count: 3
+
+# 输出设置
+output:
+  format: markdown
+  directory: ./reports
+
+# 运行设置
+settings:
+  tweets_per_user: 20
+  following_limit: 100
+  api_delay: 1
+  scan_delay: 2

@@ -1,0 +1,29 @@
+# 敏感信息
+config.yaml
+.env
+*.pem
+*.key
+
+# 数据文件
+data/
+logs/
+*.log
+
+# 历史记录（可选，如果想共享可以去掉）
+data/projects/history.txt
+
+# 临时文件
+tmp/
+*.tmp
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 依赖
+node_modules/
+__pycache__/
+*.pyc
