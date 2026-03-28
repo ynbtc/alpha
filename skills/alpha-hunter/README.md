@@ -1,15 +1,65 @@
-# Alpha Hunter 🎯
+# 🎯 Alpha Hunter
 
-自动追踪 Twitter KOL，挖掘早期 Alpha 项目的智能工具。
+> 自动追踪 Twitter KOL，挖掘早期 Alpha 项目的智能工具
 
 [![GitHub stars](https://img.shields.io/github/stars/ynbtc/alpha?style=social)](https://github.com/ynbtc/alpha/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![OpenClaw](https://img.shields.io/badge/Built%20for-OpenClaw-blue)](https://openclaw.ai)
+
+---
+
+## ✨ 核心功能
+
+### 📱 推文监控
+自动扫描 Twitter 上的早期项目信号：
+
+| 监控维度 | 说明 |
+|---------|------|
+| **KOL 推文** | 14+ 位核心 KOL 的每日推文 |
+| **@提及提取** | 自动识别推文中的 @项目账号 |
+| **URL 解析** | 提取 x.com/twitter.com 链接中的项目 |
+| **短链展开** | 尝试解析 t.co 短链指向的项目 |
+
+**关键词匹配**（20+ 个）：
+```
+Project / launch / testnet / airdrop / NFT / gem / Accounts
+protocol / token / whitelist / presale / staking / alpha...
+```
+
+### 👥 关注追踪
+监控 KOL 的关注动态，发现新增项目：
+- 10+ 位核心 KOL 关注列表监控
+- 每日对比，识别新增关注
+- 记录关注时间，判断入场时机
+
+### ✅ KOL 验证
+通过 [Frontrun.pro](https://frontrun.pro) API 验证项目质量：
+- **KOL 关注数 ≥ 3** 才记录
+- 自动过滤低质量项目
+- 数据驱动的项目筛选
+
+### 🧹 智能过滤
+自动排除噪音，聚焦优质项目：
+
+| 过滤类型 | 示例 |
+|---------|------|
+| **KOL 账号** | 研究员、交易员、分析师 |
+| **老项目** | Cointelegraph、Pumpfun、OpenSea |
+| **公链/协议** | Ethereum、Solana、Uniswap |
+| **媒体平台** | CoinDesk、TheBlock |
+
+### 🇨🇳 中文报告
+自动生成中文项目报告：
+- 项目名称 + Twitter 链接
+- 中文项目介绍（从 Bio 提取）
+- KOL 关注数统计
+- Telegram 自动推送
 
 ---
 
 ## 🚀 快速开始
 
-### 安装
+### 1. 安装
 
 ```bash
 # 克隆仓库
@@ -20,7 +70,7 @@ cd alpha
 ./install.sh
 ```
 
-### 配置环境变量
+### 2. 配置环境变量
 
 ```bash
 # Twitter 认证（必需）
@@ -35,88 +85,28 @@ export TELEGRAM_BOT_TOKEN="your_bot_token"
 export TELEGRAM_CHAT_ID="your_chat_id"
 ```
 
-> 💡 **获取 Twitter Cookie**: 登录 x.com → F12 → Application → Cookies → 复制 `auth_token` 和 `ct0`
+> 💡 **获取 Twitter Cookie**：
+> 1. 登录 [x.com](https://x.com)
+> 2. F12 打开开发者工具 → Application → Cookies
+> 3. 复制 `auth_token` 和 `ct0` 的值
 
-### 运行
+### 3. 运行
 
 ```bash
-# 一键运行
+# 一键运行全部
 alpha-hunter run-all
 
 # 单独功能
-alpha-hunter scan-tweets       # 扫描推文
-alpha-hunter check-following   # 检查关注列表
+alpha-hunter scan-tweets       # 仅扫描推文
+alpha-hunter check-following   # 仅检查关注列表
 alpha-hunter report            # 生成报告
-```
-
----
-
-## 📋 功能特性
-
-### 1. 推文监控 📱
-- **监控 14+ 位 KOL 的每日推文**
-- **自动提取提及的项目推特**（@用户名、URL链接、短链解析）
-- **增强关键词匹配**：
-  - 项目相关：`Project`、`𝗣𝗿𝗼𝗷𝗲𝗰𝘁`、`project`、`protocol`、`platform`
-  - 启动相关：`launch`、`launching`、`launched`、`presale`、`ido`
-  - NFT相关：`nft`、`NFT`、`mint`、`free mint`
-  - 测试网：`testnet`、`mainnet`、`devnet`
-  - 空投：`airdrop`、`drop`、`reward`
-  - 账户：`Accounts`、`account`、`wallet`
-  - 其他：`alpha`、`gem`、`whitelist`、`staking`、`tokenomics`
-
-### 2. 关注追踪 👥
-- 追踪 10+ 位 KOL 的关注列表
-- 识别新增关注项目
-- 发现早期 Alpha 机会
-
-### 3. KOL 验证 ✅
-- 通过 Frontrun.pro API 验证项目
-- KOL 关注数 >= 3 才记录
-- 自动过滤低质量项目
-
-### 4. 智能过滤 🧹
-- 自动排除 KOL 个人账号
-- 过滤已发币/知名老项目
-- 去除研究员/交易员等噪音
-
-### 5. 中文报告 🇨🇳
-- 自动生成中文项目报告
-- Telegram 自动推送
-- Markdown 格式导出
-
----
-
-## 🛠️ 自定义配置
-
-编辑 `config.yaml`:
-
-```yaml
-# 推文监控博主
-tweet_watchlist:
-  - leakmealpha
-  - BR4ted
-  - zacxbt
-  # 添加更多...
-
-# 关注列表监控
-following_watchlist:
-  - _GuarEmperor
-  - 0xtiao
-  # 添加更多...
-
-# 排除列表（老项目/KOL）
-excluded_projects:
-  - Cointelegraph
-  - Pumpfun
-  # 添加更多...
 ```
 
 ---
 
 ## 📊 输出示例
 
-```
+```markdown
 📊 今日热门项目 (2026-03-28)
 共27个新项目
 
@@ -130,94 +120,158 @@ KOL关注数：133⭐
 项目介绍：基于多智能体系统构建的风险投资基金
 KOL关注数：93⭐
 
+3、项目名称：24_Hours_Art
+项目推特：https://x.com/24_Hours_Art
+项目介绍：数字艺术市场报告
+KOL关注数：82⭐
+
 ...
+```
+
+---
+
+## ⚙️ 自定义配置
+
+编辑 `config.yaml`：
+
+```yaml
+# 推文监控 KOL 列表
+tweet_watchlist:
+  - leakmealpha      # Alpha 猎人
+  - BR4ted          # NFT 专家
+  - GuarEmperor     # 项目挖掘
+  - zacxbt          # 研究员
+  # 添加更多...
+
+# 关注列表监控
+following_watchlist:
+  - _GuarEmperor
+  - 0xtiao
+  - zacxbt
+  # 添加更多...
+
+# 排除列表（老项目/KOL）
+excluded_projects:
+  - Cointelegraph   # 媒体
+  - Pumpfun        # 平台
+  - Uniswap        # DeFi协议
+  # 添加更多...
 ```
 
 ---
 
 ## ⏰ 定时任务
 
-### 每天自动运行
+### Crontab（推荐）
 
 ```bash
 # 编辑 crontab
 crontab -e
 
-# 添加（每天 8:00 和 20:00 运行）
+# 每天 8:00 和 20:00 运行
 0 8,20 * * * /usr/local/bin/alpha-hunter run-all >> /var/log/alpha-hunter.log 2>&1
 ```
 
 ### OpenClaw 自动推送
 
 ```bash
+# 早报（8:00）
 openclaw cron add \
   --name "alpha-hunter-morning" \
   --cron "0 8 * * *" \
+  --message "alpha-hunter run-all" \
+  --channel telegram
+
+# 晚报（20:00）
+openclaw cron add \
+  --name "alpha-hunter-evening" \
+  --cron "0 20 * * *" \
   --message "alpha-hunter run-all" \
   --channel telegram
 ```
 
 ---
 
-## 📁 文件结构
+## 📁 项目结构
 
 ```
 alpha/
-├── alpha-hunter.sh          # 主脚本
+├── alpha-hunter.sh          # 主脚本（核心逻辑）
 ├── SKILL.md                 # Skill 文档
 ├── README.md                # 本文件
 ├── install.sh               # 安装脚本
 ├── config.yaml.template     # 配置模板
 ├── .gitignore              # Git 忽略规则
-├── data/                   # 数据目录
-│   ├── tweets/            # 推文数据
-│   ├── following/         # 关注列表
+├── data/                   # 数据目录（自动创建）
+│   ├── tweets/            # 原始推文数据
+│   ├── following/         # 关注列表快照
 │   └── projects/          # 项目数据库
 └── reports/               # 输出报告
 ```
 
 ---
 
-## 🔒 隐私保护
+## 🔒 隐私与安全
 
-- ✅ 所有敏感信息通过环境变量传入
-- ✅ 不硬编码任何个人凭证
-- ✅ 历史记录本地存储，不上传云端
-- ✅ `.gitignore` 自动排除敏感文件
+| 项目 | 处理方式 |
+|------|---------|
+| Twitter Cookie | 环境变量 `TWITTER_AUTH_TOKEN` / `TWITTER_CT0` |
+| API Key | 环境变量 `FRONTRUN_API_KEY` |
+| Telegram Token | 环境变量 `TELEGRAM_BOT_TOKEN` |
+| 本地数据 | `.gitignore` 排除，不上传 |
+| 历史记录 | 本地存储，不上传云端 |
+
+✅ **所有敏感信息均通过环境变量传入，不硬编码在代码中**
 
 ---
 
 ## 🐛 常见问题
 
 ### Q: Twitter 认证失败？
-A: 确保 `TWITTER_AUTH_TOKEN` 和 `TWITTER_CT0` 正确设置，且 Token 未过期。
+**A**: 
+- 检查 `TWITTER_AUTH_TOKEN` 和 `TWITTER_CT0` 是否正确
+- Token 可能过期，需要重新从浏览器获取
+- 确保账号未被限制
 
 ### Q: 没有找到项目？
-A: 检查 KOL 列表是否配置正确，或尝试扩大关键词范围。
+**A**:
+- 检查 KOL 列表是否配置正确
+- 尝试扩大关键词范围
+- 检查 Twitter 搜索是否正常工作
+
+### Q: 报告中的项目太多/太少？
+**A**:
+- 调整 `min_kol_count` 阈值（默认 3）
+- 添加更多项目到 `excluded_projects`
+- 调整 KOL 监控列表
 
 ### Q: 如何添加新的 KOL？
-A: 编辑 `config.yaml` 中的 `tweet_watchlist` 和 `following_watchlist`。
-
-### Q: 报告中的项目太多？
-A: 调整 `min_kol_count` 阈值，或添加更多项目到 `excluded_projects`。
+**A**: 编辑 `config.yaml`：
+```yaml
+tweet_watchlist:
+  - new_kol_username
+  
+following_watchlist:
+  - new_kol_username
+```
 
 ---
 
-## 🤝 贡献
+## 🤝 贡献指南
 
 欢迎提交 Issue 和 PR！
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+1. **Fork** 本仓库
+2. 创建特性分支：`git checkout -b feature/AmazingFeature`
+3. 提交更改：`git commit -m 'Add some AmazingFeature'`
+4. 推送分支：`git push origin feature/AmazingFeature`
+5. 创建 **Pull Request**
 
 ---
 
 ## 📜 许可证
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+[MIT License](LICENSE) - 自由使用、修改和分发
 
 ---
 
@@ -229,9 +283,15 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ---
 
-## 📮 联系
+## 📮 联系作者
 
-- Twitter: [@yn_btc](https://x.com/yn_btc)
-- GitHub: [@ynbtc](https://github.com/ynbtc)
+- **Twitter**: [@yn_btc](https://x.com/yn_btc)
+- **GitHub**: [@ynbtc](https://github.com/ynbtc)
 
-如果这个项目帮到了你，给个 ⭐ 吧！
+如果这个项目帮到了你，给个 ⭐ 让更多人发现它！
+
+---
+
+<p align="center">
+  <sub>Built with ❤️ by yn_btc</sub>
+</p>
