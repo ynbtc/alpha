@@ -30,7 +30,7 @@
 | **网络** | `testnet`、`mainnet`、`devnet` |
 | **空投** | `airdrop`、`drop`、`reward` |
 | **账户** | `Accounts`、`account`、`wallet` |
-| **其他** | `alpha`、`gem`、`whitelist`、`staking`、`tokenomics`、`早期`、`早期项目`、`热门项目` |
+| **其他** | `alpha`、`gem`、`whitelist`、`staking`、`tokenomics`、`Early`、`早期`、`早期项目`、`热门项目` |
 
 ### 👥 关注追踪
 监控 KOL 的关注动态，发现新增项目：
