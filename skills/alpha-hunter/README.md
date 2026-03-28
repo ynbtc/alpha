@@ -54,9 +54,16 @@ alpha-hunter report            # 生成报告
 ## 📋 功能特性
 
 ### 1. 推文监控 📱
-- 监控 14+ 位 KOL 的每日推文
-- 自动提取项目提及和合约地址
-- 关键词匹配（launch, alpha, gem, airdrop 等）
+- **监控 14+ 位 KOL 的每日推文**
+- **自动提取提及的项目推特**（@用户名、URL链接、短链解析）
+- **增强关键词匹配**：
+  - 项目相关：`Project`、`𝗣𝗿𝗼𝗷𝗲𝗰𝘁`、`project`、`protocol`、`platform`
+  - 启动相关：`launch`、`launching`、`launched`、`presale`、`ido`
+  - NFT相关：`nft`、`NFT`、`mint`、`free mint`
+  - 测试网：`testnet`、`mainnet`、`devnet`
+  - 空投：`airdrop`、`drop`、`reward`
+  - 账户：`Accounts`、`account`、`wallet`
+  - 其他：`alpha`、`gem`、`whitelist`、`staking`、`tokenomics`
 
 ### 2. 关注追踪 👥
 - 追踪 10+ 位 KOL 的关注列表

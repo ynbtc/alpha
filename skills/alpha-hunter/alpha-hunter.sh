@@ -145,41 +145,59 @@ check_deps() {
     log "✅ 依赖检查通过"
 }
 
-# 扫描推文（使用搜索功能）
+# 扫描推文（增强版 - 优化项目提取和关键词匹配）
 scan_tweets() {
     log "🔍 开始扫描推文..."
     
     local date_str=$(date +%Y%m%d)
     local output_file="${DATA_DIR}/tweets/${date_str}.json"
+    local raw_file="${DATA_DIR}/tweets/raw_${date_str}.json"
     
-    # 搜索关键词组合
-    local keywords=("alpha" "launch" "testnet" "airdrop" "new project" "gem" "early")
+    # 增强关键词组合（更多项目发现关键词）
+    local keywords=(
+        "Project" "𝗣𝗿𝗼𝗷𝗲𝗰𝘁" "project" 
+        "launch" " launching" "launched"
+        "alpha" "early alpha" "alpha test"
+        "testnet" "mainnet" "devnet"
+        "airdrop" "drop" "reward"
+        "nft" "NFT" "mint" "free mint"
+        "gem" "hidden gem" "alpha gem"
+        "Accounts" "account" "wallet"
+        "protocol" "platform" "ecosystem"
+        "token" "tokenomics" "$TOKEN"
+        "whitelist" "wl" "allowlist"
+        "presale" "ido" "ieo" "launchpad"
+        "staking" "yield" "farm"
+        "new" "upcoming" "soon"
+    )
+    
     local found_projects=()
+    local all_tweets="[]"
     
     for keyword in "${keywords[@]}"; do
         log "  搜索关键词: $keyword..."
         
-        # 搜索推文
+        # 搜索推文（增加数量到50）
         local tweets
-        if tweets=$(twitter search "$keyword" --max 20 --json 2>/dev/null); then
-            # 保存原始数据
-            echo "$tweets" >> "$output_file"
+        if tweets=$(twitter search "$keyword" --max 50 --json 2>/dev/null); then
+            # 合并到总数据
+            all_tweets=$(echo "$all_tweets" | jq -s '.[0] + .[1].data' <<< "$all_tweets" "$tweets" 2>/dev/null || echo "$all_tweets")
             
-            # 提取推文中的 @用户名（包括原文和转发）- 提取所有
+            # ===== 1. 提取 @提及的用户名 =====
             local mentions
-            mentions=$(echo "$tweets" | jq -r '.[].text' 2>/dev/null | grep -oE '@[a-zA-Z0-9_]+' | sort -u)
+            mentions=$(echo "$tweets" | jq -r '.data[].text' 2>/dev/null | grep -oE '@[a-zA-Z0-9_]+' | sort -u)
             
             for mention in $mentions; do
                 local clean_name="${mention#@}"
-                # 过滤 KOL 账号、老项目和无效用户名
                 if [[ ${#clean_name} -gt 3 ]] && ! is_kol_account "$clean_name" && ! is_excluded_project "$clean_name"; then
                     found_projects+=("$clean_name")
+                    log "    发现 @提及: $clean_name"
                 fi
             done
             
-            # 提取转发/引用中的作者（retweetedBy）- 提取所有
+            # ===== 2. 提取转发/引用作者 =====
             local retweet_authors
-            retweet_authors=$(echo "$tweets" | jq -r '.[] | select(.retweetedBy) | .retweetedBy.screenName' 2>/dev/null | sort -u)
+            retweet_authors=$(echo "$tweets" | jq -r '.data[] | select(.retweetedBy) | .retweetedBy.screenName' 2>/dev/null | sort -u)
             
             for author in $retweet_authors; do
                 if [[ ${#author} -gt 3 ]] && ! is_kol_account "$author" && ! is_excluded_project "$author"; then
@@ -187,9 +205,9 @@ scan_tweets() {
                 fi
             done
             
-            # 提取原文作者（非转发的）- 不过滤次数，提取所有
+            # ===== 3. 提取原文作者 =====
             local original_authors
-            original_authors=$(echo "$tweets" | jq -r '.[] | select(.isRetweet == false) | .author.screenName' 2>/dev/null | sort -u)
+            original_authors=$(echo "$tweets" | jq -r '.data[] | select(.isRetweet == false) | .author.screenName' 2>/dev/null | sort -u)
             
             for author in $original_authors; do
                 if [[ ${#author} -gt 3 ]] && ! is_kol_account "$author" && ! is_excluded_project "$author"; then
@@ -197,9 +215,9 @@ scan_tweets() {
                 fi
             done
             
-            # 提取引用推文中的作者（quotedTweet）- 提取所有
+            # ===== 4. 提取引用推文作者 =====
             local quoted_authors
-            quoted_authors=$(echo "$tweets" | jq -r '.[] | select(.quotedTweet) | .quotedTweet.author.screenName' 2>/dev/null | sort -u)
+            quoted_authors=$(echo "$tweets" | jq -r '.data[] | select(.quotedTweet) | .quotedTweet.author.screenName' 2>/dev/null | sort -u)
             
             for author in $quoted_authors; do
                 if [[ ${#author} -gt 3 ]] && ! is_kol_account "$author" && ! is_excluded_project "$author"; then
@@ -207,28 +225,58 @@ scan_tweets() {
                 fi
             done
             
-            # 提取 URL 中的项目链接
+            # ===== 5. 提取 URL 中的项目链接 =====
             local urls
-            urls=$(echo "$tweets" | jq -r '.[].urls[]?' 2>/dev/null | grep -E 'x\.com|twitter\.com' | grep -oE '/[a-zA-Z0-9_]+' | tr -d '/' | sort -u | head -10)
+            urls=$(echo "$tweets" | jq -r '.data[].urls[]?' 2>/dev/null | grep -iE 'x\.com|twitter\.com' | grep -oE '/[a-zA-Z0-9_]+' | tr -d '/' | sort -u)
             
             for url_user in $urls; do
-                if [[ ${#url_user} -gt 3 ]] && ! is_kol_account "$url_user"; then
+                if [[ ${#url_user} -gt 3 ]] && ! is_kol_account "$url_user" && ! is_excluded_project "$url_user"; then
                     found_projects+=("$url_user")
+                    log "    发现 URL: $url_user"
                 fi
             done
+            
+            # ===== 6. 提取推文中的项目链接（t.co短链） =====
+            local tco_links
+            tco_links=$(echo "$tweets" | jq -r '.data[].urls[]?' 2>/dev/null | grep -oE 't\.co/[a-zA-Z0-9]+' | sort -u)
+            
+            for link in $tco_links; do
+                # 尝试解析短链（可选，需要额外请求）
+                local expanded
+                expanded=$(curl -sI "https://$link" 2>/dev/null | grep -i location | grep -oE 'x\.com/[a-zA-Z0-9_]+' | head -1)
+                if [ -n "$expanded" ]; then
+                    local user_from_link="${expanded#x.com/}"
+                    if [[ ${#user_from_link} -gt 3 ]] && ! is_kol_account "$user_from_link" && ! is_excluded_project "$user_from_link"; then
+                        found_projects+=("$user_from_link")
+                        log "    发现短链: $user_from_link"
+                    fi
+                fi
+            done
+            
         else
             log "  ⚠️  搜索 '$keyword' 失败"
         fi
         
         # 避免请求过快
-        sleep 3
+        sleep 2
     done
     
-    # 保存发现的项目
-    printf '%s\n' "${found_projects[@]}" | sort -u > "${DATA_DIR}/projects/daily_candidates_${date_str}.txt"
+    # 保存原始数据
+    echo "$all_tweets" > "$raw_file"
     
-    local count=$(sort -u "${DATA_DIR}/projects/daily_candidates_${date_str}.txt" 2>/dev/null | wc -l)
+    # 去重并保存发现的项目
+    printf '%s\n' "${found_projects[@]}" | sort -u | grep -v '^$' > "${DATA_DIR}/projects/daily_candidates_${date_str}.txt"
+    
+    local count=$(wc -l < "${DATA_DIR}/projects/daily_candidates_${date_str}.txt" 2>/dev/null)
     log "✅ 推文扫描完成，发现 $count 个候选项目"
+    
+    # 显示前10个发现的项目
+    if [ "$count" -gt 0 ]; then
+        log "  前10个项目:"
+        head -10 "${DATA_DIR}/projects/daily_candidates_${date_str}.txt" | while read proj; do
+            log "    - $proj"
+        done
+    fi
 }
 
 # 检查关注列表
