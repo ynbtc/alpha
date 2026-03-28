@@ -176,6 +176,8 @@ scan_tweets() {
         "whitelist" "wl" "allowlist"
         "staking" "yield" "farm"
         "new" "upcoming" "soon"
+        # 中文关键词
+        "早期" "早期项目" "热门项目"
     )
     
     local found_projects=()

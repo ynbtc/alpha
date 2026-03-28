@@ -15,7 +15,7 @@
 
 | 监控维度 | 说明 |
 |---------|------|
-| **KOL 推文** | 14+ 位核心 KOL 的每日推文 |
+| **KOL 推文** | 15+ 位核心 KOL 的每日推文 |
 | **@提及提取** | 自动识别推文中的 @项目账号 |
 | **URL 解析** | 提取 x.com/twitter.com 链接中的项目 |
 | **短链展开** | 尝试解析 t.co 短链指向的项目 |
@@ -30,7 +30,7 @@
 | **网络** | `testnet`、`mainnet`、`devnet` |
 | **空投** | `airdrop`、`drop`、`reward` |
 | **账户** | `Accounts`、`account`、`wallet` |
-| **其他** | `alpha`、`gem`、`whitelist`、`staking`、`tokenomics` |
+| **其他** | `alpha`、`gem`、`whitelist`、`staking`、`tokenomics`、`早期`、`早期项目`、`热门项目` |
 
 ### 👥 关注追踪
 监控 KOL 的关注动态，发现新增项目：
