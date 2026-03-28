@@ -155,18 +155,25 @@ scan_tweets() {
     
     # 增强关键词组合（更多项目发现关键词）
     local keywords=(
-        "Project" "𝗣𝗿𝗼𝗷𝗲𝗰𝘁" "project" 
-        "launch" " launching" "launched"
-        "alpha" "early alpha" "alpha test"
-        "testnet" "mainnet" "devnet"
-        "airdrop" "drop" "reward"
-        "nft" "NFT" "mint" "free mint"
-        "gem" "hidden gem" "alpha gem"
-        "Accounts" "account" "wallet"
+        # 项目相关
+        "Project" "𝗣𝗿𝗼𝗷𝗲𝗰𝘁" "𝗣𝗿𝗼𝗷𝗲𝗰𝘁s" "project" "projects"
         "protocol" "platform" "ecosystem"
-        "token" "tokenomics" "$TOKEN"
-        "whitelist" "wl" "allowlist"
+        # 启动相关
+        "launch" "launching" "launched"
         "presale" "ido" "ieo" "launchpad"
+        # NFT相关
+        "nft" "NFT" "mint" "free mint"
+        # 网络相关
+        "testnet" "mainnet" "devnet"
+        # 空投相关
+        "airdrop" "drop" "reward"
+        # 账户相关
+        "Accounts" "account" "wallet"
+        # 其他关键词
+        "alpha" "early alpha" "alpha test"
+        "gem" "hidden gem" "alpha gem"
+        "token" "tokenomics"
+        "whitelist" "wl" "allowlist"
         "staking" "yield" "farm"
         "new" "upcoming" "soon"
     )

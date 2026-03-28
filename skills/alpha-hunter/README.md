@@ -21,10 +21,16 @@
 | **短链展开** | 尝试解析 t.co 短链指向的项目 |
 
 **关键词匹配**（20+ 个）：
-```
-Project / launch / testnet / airdrop / NFT / gem / Accounts
-protocol / token / whitelist / presale / staking / alpha...
-```
+
+| 类别 | 关键词 |
+|------|--------|
+| **项目** | `Project`、`𝗣𝗿𝗼𝗷𝗲𝗰𝘁s`、`projects`、`protocol`、`platform`、`ecosystem` |
+| **启动** | `launch`、`launching`、`launched`、`presale`、`ido`、`ieo` |
+| **NFT** | `nft`、`NFT`、`mint`、`free mint` |
+| **网络** | `testnet`、`mainnet`、`devnet` |
+| **空投** | `airdrop`、`drop`、`reward` |
+| **账户** | `Accounts`、`account`、`wallet` |
+| **其他** | `alpha`、`gem`、`whitelist`、`staking`、`tokenomics` |
 
 ### 👥 关注追踪
 监控 KOL 的关注动态，发现新增项目：
