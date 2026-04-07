@@ -4,15 +4,11 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd ""$(dirname ""){BASH_SOURCE[0]}"" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.yaml"
 DATA_DIR="${SCRIPT_DIR}/data"
 REPORTS_DIR="${SCRIPT_DIR}/reports"
 LOGS_DIR="${SCRIPT_DIR}/logs"
-
-# Telegram 配置（从环境变量读取）
-TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
-TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 
 # Twitter 认证（从环境变量读取）
 export TWITTER_AUTH_TOKEN="${TWITTER_AUTH_TOKEN:-}"
@@ -50,7 +46,7 @@ KOL_ACCOUNTS=(
     "HottieBabeGem" "asedd72" "weingfo" "ssheyii"
 )
 
-# 推文监控列表（从这些博主的推文中提取项目）
+# 推文监控列表（从这些博主的推文中提取项目提及）
 TWEET_WATCHLIST=(
     "leakmealpha" "BR4ted" "GuarEmperor" "0xvietnguyen" "Trappwurld"
     "tenacious_ar" "0xRohitz" "nics_off" "Alfa_or_Not" "0xdetweiler"
@@ -90,8 +86,6 @@ EXCLUDED_PROJECTS=(
     "lensprotocol" "farcaster_xyz"
 )
 
-
-
 # 检查是否为 KOL 账号（不是项目）
 is_kol_account() {
     local username="$1"
@@ -112,32 +106,6 @@ is_excluded_project() {
         fi
     done
     return 1
-}
-
-# Telegram 推送函数
-send_telegram() {
-    local message="$1"
-    local report_file="$2"
-    
-    if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-        log "⚠️  Telegram Bot Token 未配置，跳过推送"
-        return 1
-    fi
-    
-    # 发送文本消息
-    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-        -H "Content-Type: application/json" \
-        -d "{\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"${message}\",\"parse_mode\":\"Markdown\",\"disable_web_page_preview\":true}" > /dev/null
-    
-    # 如果有报告文件，也发送文件
-    if [ -n "$report_file" ] && [ -f "$report_file" ]; then
-        curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
-            -F "chat_id=${TELEGRAM_CHAT_ID}" \
-            -F "document=@${report_file}" \
-            -F "caption=Alpha Hunter 详细报告" > /dev/null
-    fi
-    
-    log "✅ Telegram 推送完成"
 }
 
 # 检查依赖
@@ -432,7 +400,7 @@ get_project_source() {
         local tweet_kol
         tweet_kol=$(grep -F "${username}|" "$tweet_sources" 2>/dev/null | head -1 | cut -d'|' -f2)
         if [ -n "$tweet_kol" ]; then
-            sources="[推文提及] @${tweet_kol}"
+            sources="[推文提及] @$tweet_kol"
         fi
     fi
     
@@ -442,9 +410,9 @@ get_project_source() {
         following_kol=$(grep -F "${username}|" "$following_sources" 2>/dev/null | head -1 | cut -d'|' -f2)
         if [ -n "$following_kol" ]; then
             if [ -n "$sources" ]; then
-                sources="${sources} | [新增关注] @${following_kol}"
+                sources="${sources} | [新增关注] @$following_kol"
             else
-                sources="[新增关注] @${following_kol}"
+                sources="[新增关注] @$following_kol"
             fi
         fi
     fi
@@ -465,14 +433,14 @@ generate_report() {
     local report_file="${REPORTS_DIR}/alpha-report-${date_display}.md"
     local verified_file="${DATA_DIR}/projects/verified_${date_str}.json"
     
-    # 筛选所有 KOL >= 3 的项目（不过滤KOL账号，因为候选阶段已过滤）
+    # 筛选所有 KOL >= 3 的项目
     local all_projects
     all_projects=$(jq '[.[] | select(.kol_count >= 3)] | sort_by(.kol_count) | reverse' "$verified_file" 2>/dev/null)
     
     local project_count
     project_count=$(echo "$all_projects" | jq 'length')
     
-    # 生成 Markdown 报告（使用指定模板）
+    # 生成 Markdown 报告
     cat > "$report_file" << EOF
 📊 今日热门项目 (${date_display}) - 共${project_count}个项目
 
@@ -482,14 +450,11 @@ EOF
         echo "今日未发现项目" >> "$report_file"
     else
         local idx=0
-        echo "$all_projects" | jq -r '.[] | "\(.username)|\(.kol_count)"' | while IFS='|' read -r username kol_count; do
-            idx=$((idx + 1))
-            # 获取项目介绍
-            local bio
-            bio=$(get_project_bio "$username")
-            # 获取项目来源
-            local source
-            source=$(get_project_source "$username" "$date_str")
+        echo "$all_projects" | jq -r '.[] | "
+                ".username|
+ame}")
+        local source
+        source=$(get_project_source "$username" "$date_str")
             cat >> "$report_file" << EOF
 ${idx}、项目名称：${username}
 项目推特：https://x.com/${username}
@@ -515,36 +480,6 @@ EOF
 
     log "✅ 报告已生成: $report_file"
     
-    # 生成 Telegram 推送消息（使用指定模板）
-    local tg_message="📊 今日热门项目 (${date_display}) - 共${project_count}个项目\n"
-
-    if [ "$project_count" -eq 0 ]; then
-        tg_message+="\n今日未发现项目\n"
-    else
-        local idx=0
-        echo "$all_projects" | jq -r '.[] | "\(.username)|\(.kol_count)"' | head -15 | while IFS='|' read -r username kol_count; do
-            idx=$((idx + 1))
-            # 获取项目介绍
-            local bio
-            bio=$(get_project_bio "$username")
-            # 获取项目来源
-            local source
-            source=$(get_project_source "$username" "$date_str")
-            tg_message+="\n${idx}、${username}\n"
-            tg_message+="https://x.com/${username}\n"
-            tg_message+="${bio:0:80}... (${kol_count}⭐)\n"
-            tg_message+="来源：${source}\n"
-            # API 限速
-            sleep 1
-        done
-    fi
-
-    tg_message+="\n---\n"
-    tg_message+="📈 候选: ${total_candidates}个 | KOL>=3: ${project_count}个"
-    
-    # 发送 Telegram 推送
-    send_telegram "$tg_message" "$report_file"
-    
     # 输出报告内容
     cat "$report_file"
 }
@@ -567,7 +502,7 @@ case "${1:-run-all}" in
     scan-tweets)
         check_deps
         scan_tweets
-        ;;
+        ;; 
     check-following)
         check_deps
         check_following
@@ -576,14 +511,14 @@ case "${1:-run-all}" in
         check_deps
         count=$(verify_project "$2")
         echo "项目 @$2 的 KOL 关注数: $count"
-        ;;
+        ;; 
     verify-candidates)
         check_deps
         verify_candidates
-        ;;
+        ;; 
     report)
         generate_report
-        ;;
+        ;; 
     run-all)
         run_all
         ;;
@@ -599,5 +534,5 @@ case "${1:-run-all}" in
         echo "  run-all           一键运行全部"
         echo ""
         exit 1
-        ;;
+        ;; 
 esac
