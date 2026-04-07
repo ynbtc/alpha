@@ -1,6 +1,6 @@
 ---
 name: alpha-hunter
-description: 自动追踪 Twitter KOL 的推文和关注列表，挖掘早期 Alpha 项目。监控指定博主每日推文，追踪 KOL 关注动态，通过 Frontrun.pro API 验证项目关注度，输出汇总报告。
+description: 自动追踪 Twitter KOL 的推文和关注列表，挖掘早期 Alpha 项目。监控指定博主每日推文，追踪 KOL 关注动态，通过 Frontrun.pro API 验证项目关注度[...]
 author: OpenClaw Community
 version: 1.0.0
 homepage: https://github.com/openclaw/alpha-hunter
@@ -19,8 +19,6 @@ env:
   - TWITTER_AUTH_TOKEN
   - TWITTER_CT0
   - FRONTRUN_API_KEY
-  - TELEGRAM_BOT_TOKEN
-  - TELEGRAM_CHAT_ID
 ---
 
 # Alpha Hunter - 早期项目挖掘助手
@@ -70,10 +68,6 @@ export TWITTER_CT0="your_ct0"
 
 # Frontrun.pro API（必需）
 export FRONTRUN_API_KEY="your_api_key"
-
-# Telegram 推送（可选）
-export TELEGRAM_BOT_TOKEN="your_bot_token"
-export TELEGRAM_CHAT_ID="your_chat_id"
 ```
 
 ### 3. 配置监控列表
