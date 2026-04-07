@@ -50,6 +50,25 @@ KOL_ACCOUNTS=(
     "HottieBabeGem" "asedd72" "weingfo" "ssheyii"
 )
 
+# 推文监控列表（从这些博主的推文中提取项目）
+TWEET_WATCHLIST=(
+    "leakmealpha" "BR4ted" "GuarEmperor" "0xvietnguyen" "Trappwurld"
+    "tenacious_ar" "0xRohitz" "nics_off" "Alfa_or_Not" "0xdetweiler"
+    "zacxbt" "getmoni_io" "spice0182" "huseyin1tekin"
+)
+
+# 关注列表监控（监控这些 KOL 新关注了谁）
+FOLLOWING_WATCHLIST=(
+    "feibo03" "0xtiao" "_GuarEmperor" "kaisi420" "sanyi_eth_"
+    "eternaldegen" "0xdetweiler" "yuyue_chris" "banditxbt" "Eli5defi"
+    "Cady_btc" "BR4ted" "moo9000" "lmrankhan" "0xminion"
+    "Toro_Ceo" "probablytails" "0xLuo" "ETH3210" "jiumeng88888"
+    "Crypto_Goatinho" "roybitsir" "zacxbt" "cz_binance" "wsdxbz1"
+    "AlphaSeeker21" "heyibinance" "0xSunNFT" "ShockedJS" "HunterOnlyETH"
+    "DUANMEI11" "sunyuchentron" "0xmagnolia" "miguelrare" "scriptdotmoney"
+    "BitCloutCat" "CryptoDevinL" "notab2d_"
+)
+
 # 已发币/成名已久的老项目（排除列表）
 EXCLUDED_PROJECTS=(
     # 知名媒体/平台
@@ -145,146 +164,81 @@ check_deps() {
     log "✅ 依赖检查通过"
 }
 
-# 扫描推文（增强版 - 优化项目提取和关键词匹配）
+# 扫描推文（从监控博主推文中提取项目提及）
 scan_tweets() {
     log "🔍 开始扫描推文..."
     
     local date_str=$(date +%Y%m%d)
-    local output_file="${DATA_DIR}/tweets/${date_str}.json"
-    local raw_file="${DATA_DIR}/tweets/raw_${date_str}.json"
+    local candidates_file="${DATA_DIR}/projects/daily_candidates_${date_str}.txt"
+    local sources_file="${DATA_DIR}/projects/tweet_sources_${date_str}.txt"
     
-    # 增强关键词组合（更多项目发现关键词）
-    local keywords=(
-        # 项目相关
-        "Project" "𝗣𝗿𝗼𝗷𝗲𝗰𝘁" "𝗣𝗿𝗼𝗷𝗲𝗰𝘁s" "project" "projects"
-        "protocol" "platform" "ecosystem"
-        # 启动相关
-        "launch" "launching" "launched"
-        "presale" "ido" "ieo" "launchpad"
-        # NFT相关
-        "nft" "NFT" "mint" "free mint"
-        # 网络相关
-        "testnet" "mainnet" "devnet"
-        # 空投相关
-        "airdrop" "drop" "reward"
-        # 账户相关
-        "Accounts" "account" "wallet"
-        # 其他关键词
-        "alpha" "early alpha" "alpha test"
-        "gem" "hidden gem" "alpha gem"
-        "token" "tokenomics"
-        "whitelist" "wl" "allowlist"
-        "staking" "yield" "farm"
-        "new" "upcoming" "soon"
-        # 中文关键词
-        "早期" "早期项目" "热门项目"
-        # 英文变体
-        "Early" "EARLY"
-    )
+    # 清空旧数据
+    > "$candidates_file"
+    > "$sources_file"
     
     local found_projects=()
-    local all_tweets="[]"
     
-    for keyword in "${keywords[@]}"; do
-        log "  搜索关键词: $keyword..."
+    for username in "${TWEET_WATCHLIST[@]}"; do
+        log "  获取 @$username 的推文..."
         
-        # 搜索推文（增加数量到50）
         local tweets
-        if tweets=$(twitter search "$keyword" --max 50 --json 2>/dev/null); then
-            # 合并到总数据
-            all_tweets=$(echo "$all_tweets" | jq -s '.[0] + .[1].data' <<< "$all_tweets" "$tweets" 2>/dev/null || echo "$all_tweets")
+        if tweets=$(twitter tweets "$username" --max 20 --json 2>/dev/null); then
             
-            # ===== 1. 提取 @提及的用户名 =====
+            # ===== 1. 从推文文本中提取 @提及 =====
             local mentions
-            mentions=$(echo "$tweets" | jq -r '.data[].text' 2>/dev/null | grep -oE '@[a-zA-Z0-9_]+' | sort -u)
+            mentions=$(echo "$tweets" | jq -r '.data[].text // .[] .text // empty' 2>/dev/null | grep -oE '@[a-zA-Z0-9_]+' | sort -u)
             
             for mention in $mentions; do
                 local clean_name="${mention#@}"
                 if [[ ${#clean_name} -gt 3 ]] && ! is_kol_account "$clean_name" && ! is_excluded_project "$clean_name"; then
                     found_projects+=("$clean_name")
-                    log "    发现 @提及: $clean_name"
+                    echo "$clean_name|$username" >> "$sources_file"
+                    log "  @$username 的推文中发现项目: @$clean_name"
                 fi
             done
             
-            # ===== 2. 提取转发/引用作者 =====
-            local retweet_authors
-            retweet_authors=$(echo "$tweets" | jq -r '.data[] | select(.retweetedBy) | .retweetedBy.screenName' 2>/dev/null | sort -u)
-            
-            for author in $retweet_authors; do
-                if [[ ${#author} -gt 3 ]] && ! is_kol_account "$author" && ! is_excluded_project "$author"; then
-                    found_projects+=("$author")
-                fi
-            done
-            
-            # ===== 3. 提取原文作者 =====
-            local original_authors
-            original_authors=$(echo "$tweets" | jq -r '.data[] | select(.isRetweet == false) | .author.screenName' 2>/dev/null | sort -u)
-            
-            for author in $original_authors; do
-                if [[ ${#author} -gt 3 ]] && ! is_kol_account "$author" && ! is_excluded_project "$author"; then
-                    found_projects+=("$author")
-                fi
-            done
-            
-            # ===== 4. 提取引用推文作者 =====
+            # ===== 2. 提取引用推文作者 =====
             local quoted_authors
-            quoted_authors=$(echo "$tweets" | jq -r '.data[] | select(.quotedTweet) | .quotedTweet.author.screenName' 2>/dev/null | sort -u)
+            quoted_authors=$(echo "$tweets" | jq -r '.data[] | select(.quotedTweet) | .quotedTweet.author.screenName // empty' 2>/dev/null | sort -u)
             
             for author in $quoted_authors; do
                 if [[ ${#author} -gt 3 ]] && ! is_kol_account "$author" && ! is_excluded_project "$author"; then
                     found_projects+=("$author")
+                    echo "$author|$username" >> "$sources_file"
+                    log "  @$username 的引用推文中发现项目: @$author"
                 fi
             done
             
-            # ===== 5. 提取 URL 中的项目链接 =====
-            local urls
-            urls=$(echo "$tweets" | jq -r '.data[].urls[]?' 2>/dev/null | grep -iE 'x\.com|twitter\.com' | grep -oE '/[a-zA-Z0-9_]+' | tr -d '/' | sort -u)
+            # ===== 3. 提取转发原作者 =====
+            local retweet_authors
+            retweet_authors=$(echo "$tweets" | jq -r '.data[] | select(.retweetedBy) | .retweetedBy.screenName // empty' 2>/dev/null | sort -u)
             
-            for url_user in $urls; do
-                if [[ ${#url_user} -gt 3 ]] && ! is_kol_account "$url_user" && ! is_excluded_project "$url_user"; then
-                    found_projects+=("$url_user")
-                    log "    发现 URL: $url_user"
-                fi
-            done
-            
-            # ===== 6. 提取推文中的项目链接（t.co短链） =====
-            local tco_links
-            tco_links=$(echo "$tweets" | jq -r '.data[].urls[]?' 2>/dev/null | grep -oE 't\.co/[a-zA-Z0-9]+' | sort -u)
-            
-            for link in $tco_links; do
-                # 尝试解析短链（可选，需要额外请求）
-                local expanded
-                expanded=$(curl -sI "https://$link" 2>/dev/null | grep -i location | grep -oE 'x\.com/[a-zA-Z0-9_]+' | head -1)
-                if [ -n "$expanded" ]; then
-                    local user_from_link="${expanded#x.com/}"
-                    if [[ ${#user_from_link} -gt 3 ]] && ! is_kol_account "$user_from_link" && ! is_excluded_project "$user_from_link"; then
-                        found_projects+=("$user_from_link")
-                        log "    发现短链: $user_from_link"
-                    fi
+            for author in $retweet_authors; do
+                if [[ ${#author} -gt 3 ]] && ! is_kol_account "$author" && ! is_excluded_project "$author"; then
+                    found_projects+=("$author")
+                    echo "$author|$username" >> "$sources_file"
                 fi
             done
             
         else
-            log "  ⚠️  搜索 '$keyword' 失败"
+            log "  ⚠️  无法获取 @$username 的推文"
         fi
         
         # 避免请求过快
         sleep 2
     done
     
-    # 保存原始数据
-    echo "$all_tweets" > "$raw_file"
-    
     # 去重并保存发现的项目
-    printf '%s\n' "${found_projects[@]}" | sort -u | grep -v '^$' > "${DATA_DIR}/projects/daily_candidates_${date_str}.txt"
+    printf '%s\n' "${found_projects[@]}" | sort -u | grep -v '^$' > "$candidates_file"
     
-    local count=$(wc -l < "${DATA_DIR}/projects/daily_candidates_${date_str}.txt" 2>/dev/null)
+    local count
+    count=$(wc -l < "$candidates_file" 2>/dev/null || echo 0)
     log "✅ 推文扫描完成，发现 $count 个候选项目"
     
     # 显示前10个发现的项目
     if [ "$count" -gt 0 ]; then
         log "  前10个项目:"
-        head -10 "${DATA_DIR}/projects/daily_candidates_${date_str}.txt" | while read proj; do
+        head -10 "$candidates_file" | while read -r proj; do
             log "    - $proj"
         done
     fi
@@ -296,50 +250,12 @@ check_following() {
     
     local date_str=$(date +%Y%m%d)
     local following_dir="${DATA_DIR}/following"
+    local sources_file="${DATA_DIR}/projects/following_sources_${date_str}.txt"
     
-    # 关注列表监控（35位KOL）
-    local targets=(
-        "feibo03"
-        "0xtiao"
-        "_GuarEmperor"
-        "kaisi420"
-        "sanyi_eth_"
-        "eternaldegen"
-        "0xdetweiler"
-        "yuyue_chris"
-        "banditxbt"
-        "Eli5defi"
-        "Cady_btc"
-        "BR4ted"
-        "moo9000"
-        "lmrankhan"
-        "0xminion"
-        "Toro_Ceo"
-        "probablytails"
-        "0xLuo"
-        "ETH3210"
-        "jiumeng88888"
-        "Crypto_Goatinho"
-        "roybitsir"
-        "zacxbt"
-        "cz_binance"
-        "wsdxbz1"
-        "AlphaSeeker21"
-        "heyibinance"
-        "0xSunNFT"
-        "ShockedJS"
-        "HunterOnlyETH"
-        "DUANMEI11"
-        "sunyuchentron"
-        "0xmagnolia"
-        "miguelrare"
-        "scriptdotmoney"
-        "BitCloutCat"
-        "CryptoDevinL"
-        "notab2d_"
-    )
+    # 清空旧数据
+    > "$sources_file"
     
-    for target in "${targets[@]}"; do
+    for target in "${FOLLOWING_WATCHLIST[@]}"; do
         log "  检查 @$target 的关注列表..."
         
         local current_file="${following_dir}/${target}_${date_str}.json"
@@ -351,7 +267,10 @@ check_following() {
             # 如果有历史数据，对比找出新增关注
             if [ -f "$prev_file" ]; then
                 local new_follows
-                new_follows=$(comm -13 <(jq -r '.[].username' "$prev_file" 2>/dev/null | sort) <(jq -r '.[].username' "$current_file" 2>/dev/null | sort) | head -20)
+                new_follows=$(comm -13 \
+                    <(jq -r '.[] | .username // .screen_name // .screenName // empty' "$prev_file" 2>/dev/null | sort) \
+                    <(jq -r '.[] | .username // .screen_name // .screenName // empty' "$current_file" 2>/dev/null | sort) \
+                    | head -20)
                 
                 if [ -n "$new_follows" ]; then
                     log "  🆕 @$target 新增关注:"
@@ -360,6 +279,7 @@ check_following() {
                         if ! is_kol_account "$user"; then
                             log "    - @$user"
                             echo "$user" >> "${DATA_DIR}/projects/following_candidates_${date_str}.txt"
+                            echo "$user|$target" >> "$sources_file"
                         fi
                     done
                 fi
@@ -499,6 +419,43 @@ verify_candidates() {
     log "✅ 验证完成，结果保存至 $verified_file"
 }
 
+# 获取项目来源
+get_project_source() {
+    local username="$1"
+    local date_str="$2"
+    local tweet_sources="${DATA_DIR}/projects/tweet_sources_${date_str}.txt"
+    local following_sources="${DATA_DIR}/projects/following_sources_${date_str}.txt"
+    local sources=""
+    
+    # 检查推文来源
+    if [ -f "$tweet_sources" ]; then
+        local tweet_kol
+        tweet_kol=$(grep -F "${username}|" "$tweet_sources" 2>/dev/null | head -1 | cut -d'|' -f2)
+        if [ -n "$tweet_kol" ]; then
+            sources="[推文提及] @${tweet_kol}"
+        fi
+    fi
+    
+    # 检查关注来源
+    if [ -f "$following_sources" ]; then
+        local following_kol
+        following_kol=$(grep -F "${username}|" "$following_sources" 2>/dev/null | head -1 | cut -d'|' -f2)
+        if [ -n "$following_kol" ]; then
+            if [ -n "$sources" ]; then
+                sources="${sources} | [新增关注] @${following_kol}"
+            else
+                sources="[新增关注] @${following_kol}"
+            fi
+        fi
+    fi
+    
+    if [ -z "$sources" ]; then
+        sources="[未知来源]"
+    fi
+    
+    echo "$sources"
+}
+
 # 生成报告
 generate_report() {
     log "📝 生成报告..."
@@ -530,11 +487,15 @@ EOF
             # 获取项目介绍
             local bio
             bio=$(get_project_bio "$username")
+            # 获取项目来源
+            local source
+            source=$(get_project_source "$username" "$date_str")
             cat >> "$report_file" << EOF
 ${idx}、项目名称：${username}
 项目推特：https://x.com/${username}
 项目介绍：${bio}
 KOL关注数：${kol_count} ⭐
+来源：${source}
 
 EOF
             # API 限速
@@ -547,7 +508,7 @@ EOF
     
     cat >> "$report_file" << EOF
 ---
-📈 候选项目: ${total_candidates} 个 | 🔥 高潜力: ${high_count} 个
+📈 候选项目: ${total_candidates} 个 | ✅ KOL>=3: ${project_count} 个
 
 *Generated by Alpha Hunter v0.1.0*
 EOF
@@ -566,9 +527,13 @@ EOF
             # 获取项目介绍
             local bio
             bio=$(get_project_bio "$username")
+            # 获取项目来源
+            local source
+            source=$(get_project_source "$username" "$date_str")
             tg_message+="\n${idx}、${username}\n"
             tg_message+="https://x.com/${username}\n"
             tg_message+="${bio:0:80}... (${kol_count}⭐)\n"
+            tg_message+="来源：${source}\n"
             # API 限速
             sleep 1
         done
