@@ -66,7 +66,6 @@ script、LaserCat397.eth、CryptoD、Nota
 - 项目名称 + Twitter 链接
 - 中文项目介绍（从 Bio 提取）
 - KOL 关注数统计
-- Telegram 自动推送
 
 ---
 
@@ -92,10 +91,6 @@ export TWITTER_CT0="your_ct0"
 
 # Frontrun.pro API（必需）
 export FRONTRUN_API_KEY="your_api_key"
-
-# Telegram 推送（可选）
-export TELEGRAM_BOT_TOKEN="your_bot_token"
-export TELEGRAM_CHAT_ID="your_chat_id"
 ```
 
 > 💡 **获取 Twitter Cookie**：
@@ -230,7 +225,6 @@ alpha/
 |------|---------|
 | Twitter Cookie | 环境变量 `TWITTER_AUTH_TOKEN` / `TWITTER_CT0` |
 | API Key | 环境变量 `FRONTRUN_API_KEY` |
-| Telegram Token | 环境变量 `TELEGRAM_BOT_TOKEN` |
 | 本地数据 | `.gitignore` 排除，不上传 |
 | 历史记录 | 本地存储，不上传云端 |
 
